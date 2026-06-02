@@ -1,0 +1,422 @@
+@model ScoutingAppMvc.Models.Player
+@{
+    ViewData["Title"] = "Edit Player";
+    var positions = (Dictionary<string,string>)ViewBag.Positions;
+}
+
+@section Styles {
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface2: #1c2232;
+    --surface3: #111622;
+    --border: #232a3a;
+    --accent: oklch(62% 0.18 145);
+    --accent-orange: oklch(72% 0.19 40);
+    --accent-blue: oklch(56% 0.18 210);
+    --text: #e5e7eb;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --input-bg: #1c2232;
+    --input-border: #2a3245;
+    --input-focus: oklch(56% 0.18 210);
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+  }
+
+  /* ── NAVBAR ── */
+  nav {
+    background: #0f1117;
+    border-bottom: 1px solid #1e2230;
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-username { font-weight: 700; font-size: 15px; color: var(--accent-orange); letter-spacing: 0.02em; }
+  .nav-badge {
+    background: oklch(58% 0.2 25); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .nav-right { display: flex; align-items: center; gap: 6px; }
+  .nav-link {
+    color: #9ca3af; font-size: 13.5px; font-weight: 500;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    text-decoration: none; background: none; border: none;
+  }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .nav-btn {
+    font-family: 'Barlow', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer;
+    letter-spacing: 0.02em; transition: all 0.18s ease; white-space: nowrap;
+  }
+  .btn-create-nav { background: var(--accent-orange); color: #fff; }
+  .btn-create-nav:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-search-nav { background: var(--accent-blue); color: #fff; }
+  .btn-search-nav:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-accounts-nav { background: var(--accent); color: #fff; }
+  .btn-accounts-nav:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-delete-nav { background: oklch(58% 0.2 25); color: #fff; }
+  .btn-delete-nav:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-logout-nav { background: #374151; color: #e5e7eb; }
+  .btn-logout-nav:hover { background: #4b5563; transform: translateY(-1px); }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 36px 24px;
+    background: radial-gradient(ellipse at 50% 0%, #1a2a1c 0%, #0f1117 65%);
+  }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    width: 100%;
+    max-width: 580px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  /* ── CARD HEADER ── */
+  .card-header {
+    padding: 22px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(56,100,180,0.15) 0%, transparent 60%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .card-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent));
+    border-radius: 18px 18px 0 0;
+  }
+  .header-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--accent-blue);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── SECTIONS ── */
+  .form-body { padding: 0; }
+
+  .section { border-bottom: 1px solid var(--border); }
+
+  .section-header {
+    padding: 10px 28px;
+    background: var(--surface3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .section-label {
+    font-size: 10px; font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+  }
+
+  .section-toggle {
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    display: flex; align-items: center;
+  }
+  .section-toggle.open { transform: rotate(180deg); }
+
+  .section-body {
+    padding: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .section-body.collapsed { display: none; }
+
+  /* ── FIELDS ── */
+  .fields-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .fields-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field-label {
+    font-size: 10.5px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  .required { color: oklch(65% 0.2 25); }
+
+  input[type="text"],
+  input[type="date"],
+  input[type="number"],
+  select {
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+    cursor: pointer;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px oklch(56% 0.18 210 / 0.15);
+  }
+
+  input::placeholder { color: #374151; }
+  select option { background: #1c2232; }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.4);
+    cursor: pointer;
+  }
+
+  /* ── FOOTER ── */
+  .card-footer {
+    padding: 16px 28px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--surface2);
+  }
+
+  .btn-cancel {
+    font-family: 'Barlow', sans-serif;
+    font-size: 13.5px; font-weight: 600;
+    padding: 10px 22px; border-radius: 9px;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.18s ease; white-space: nowrap;
+  }
+  .btn-cancel:hover { background: var(--surface); color: var(--text); border-color: #3a4460; }
+
+  .btn-submit {
+    font-family: 'Barlow', sans-serif;
+    font-size: 13.5px; font-weight: 800;
+    padding: 10px 26px; border-radius: 9px;
+    border: none;
+    background: var(--accent-blue); color: #fff;
+    cursor: pointer; transition: all 0.18s ease;
+    white-space: nowrap; letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-submit:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0 4px 16px oklch(56% 0.18 210 / 0.4); }
+  .btn-submit:active { transform: translateY(0); }
+
+</style>
+}
+
+<main>
+  <div class="form-card">
+    <div class="card-header">
+      <div class="header-icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </div>
+      <div class="card-title">Edit Player</div>
+    </div>
+
+    <form asp-controller="Player" asp-action="Edit" asp-route-id="@Model.Id" method="post">
+      <div class="form-body">
+
+        <div class="section">
+          <div class="section-header"><span class="section-label">Player Info</span></div>
+          <div class="section-body">
+            <div class="fields-row">
+              <div class="field">
+                <label class="field-label">Display Name <span class="required">*</span></label>
+                <input asp-for="Name" type="text" required />
+              </div>
+              <div class="field">
+                <label class="field-label">Gender</label>
+                <select asp-for="Gender">
+                  @foreach (var g in (List<string>)ViewBag.GenderOptions)
+                  {
+                    <option value="@g">@g</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="fields-row">
+              <div class="field">
+                <label class="field-label">Main Position</label>
+                <select asp-for="Position">
+                  <option value=""> Select </option>
+                  @foreach (var pos in positions)
+                  {
+                    <option value="@pos.Key">@pos.Value</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Other Position</label>
+                <select asp-for="OtherPosition">
+                  <option value=""> None </option>
+                  @foreach (var pos in positions)
+                  {
+                    <option value="@pos.Key">@pos.Value</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header"><span class="section-label">Team</span></div>
+          <div class="section-body">
+            <div class="field">
+              <label class="field-label">Club / Team Name</label>
+              <input asp-for="Team" type="text" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header" onclick="toggleSection(this)">
+            <span class="section-label">Optional Fields</span>
+            <span class="section-toggle open">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </span>
+          </div>
+          <div class="section-body">
+            <div class="fields-row">
+              <div class="field">
+                <label class="field-label">First Name</label>
+                <input asp-for="FirstName" type="text" />
+              </div>
+              <div class="field">
+                <label class="field-label">Last Name</label>
+                <input asp-for="LastName" type="text" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Nationality</label>
+              <input asp-for="Nationality" type="text" />
+            </div>
+            <div class="fields-row-3">
+              <div class="field">
+                <label class="field-label">Birthday</label>
+                <input asp-for="Birthday" type="date" />
+              </div>
+              <div class="field">
+                <label class="field-label">Height (cm)</label>
+                <input asp-for="Height" type="number" min="100" max="250" />
+              </div>
+              <div class="field">
+                <label class="field-label">Weight (kg)</label>
+                <input asp-for="Weight" type="number" min="40" max="150" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Preferred Foot</label>
+              <select asp-for="Foot">
+                <option value=""> Not specified </option>
+                @foreach (var f in (List<string>)ViewBag.FootOptions)
+                {
+                  <option value="@f">@f</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="card-footer">
+        <a class="btn-cancel" asp-controller="Player" asp-action="Details" asp-route-id="@Model.Id">Cancel</a>
+        <button type="submit" class="btn-submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+@section Scripts {
+<script>
+  function toggleSection(hdr) {
+    const body   = hdr.nextElementSibling;
+    const toggle = hdr.querySelector('.section-toggle');
+    body.classList.toggle('collapsed');
+    toggle.classList.toggle('open');
+  }
+</script>
+}
+
+
+

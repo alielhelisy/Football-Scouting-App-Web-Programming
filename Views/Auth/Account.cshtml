@@ -1,0 +1,650 @@
+@model ScoutingAppMvc.Models.User
+@{ ViewData["Title"] = "Account"; }
+
+@section Styles {
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --nav-bg: #0f1117;
+    --nav-border: #1e2230;
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface2: #1c2232;
+    --border: #232a3a;
+    --accent: oklch(62% 0.18 145);
+    --accent-orange: oklch(72% 0.19 40);
+    --accent-blue: oklch(62% 0.18 210);
+    --text: #e5e7eb;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --admin-badge: oklch(72% 0.19 40);
+    --btn-create: oklch(72% 0.19 40);
+    --btn-search: oklch(56% 0.18 210);
+    --btn-accounts: oklch(58% 0.18 145);
+    --btn-delete: oklch(58% 0.2 25);
+    --btn-logout: #374151;
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+  }
+
+  /* ── NAVBAR ── */
+  nav {
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--nav-border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-avatars { display: flex; gap: -4px; }
+  .nav-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--text-dim);
+    margin-right: -6px;
+  }
+  .nav-username { font-weight: 700; font-size: 15px; color: var(--admin-badge); letter-spacing: 0.02em; margin-left: 0; }
+  .nav-badge {
+    background: oklch(58% 0.2 25); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .nav-right { display: flex; align-items: center; gap: 6px; }
+  .nav-link {
+    color: #9ca3af; font-size: 13.5px; font-weight: 500;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    text-decoration: none; background: none; border: none;
+  }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .nav-btn {
+    font-family: 'Barlow', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer;
+    letter-spacing: 0.02em; transition: all 0.18s ease;
+  }
+  .btn-create { background: var(--btn-create); color: #fff; }
+  .btn-create:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-search { background: var(--btn-search); color: #fff; }
+  .btn-search:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-accounts { background: var(--btn-accounts); color: #fff; }
+  .btn-accounts:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-delete { background: var(--btn-delete); color: #fff; }
+  .btn-delete:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-logout { background: var(--btn-logout); color: #e5e7eb; }
+  .btn-logout:hover { background: #4b5563; transform: translateY(-1px); }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    padding: 40px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ── PROFILE HEADER ── */
+  .profile-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue));
+  }
+
+  .profile-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .profile-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--surface2), var(--border));
+    border: 3px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 800;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .profile-status {
+    position: absolute;
+    bottom: 3px; right: 3px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--surface);
+  }
+
+  .profile-info { flex: 1; }
+
+  .profile-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+  }
+
+  .profile-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    background: oklch(58% 0.2 25 / 0.15);
+    border: 1px solid oklch(58% 0.2 25 / 0.3);
+    color: oklch(72% 0.2 25);
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+
+  /* ── INFO GRID ── */
+  .info-grid {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 40px;
+    margin-bottom: 20px;
+  }
+
+  .info-field {}
+
+  .info-label {
+    font-size: 10.5px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 5px;
+  }
+
+  .info-value {
+    font-size: 15px; font-weight: 600;
+    color: var(--text);
+  }
+
+  .info-value.empty { color: var(--text-muted); font-weight: 400; font-style: italic; }
+  .info-value.highlight { color: var(--accent-orange); }
+
+  /* SECURITY / CHANGE PASSWORD */
+  .security-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 32px;
+    margin-bottom: 20px;
+  }
+
+  .security-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .security-head-left { display: flex; align-items: center; gap: 12px; }
+
+  .security-icon {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent-blue);
+    flex-shrink: 0;
+  }
+
+  .security-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+  }
+
+  .security-sub {
+    font-size: 12.5px; font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .btn-change-pw {
+    font-family: 'Barlow', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 9px 18px; border-radius: 7px; cursor: pointer;
+    background: var(--accent-blue); color: #fff;
+    border: none; text-decoration: none; display: inline-block;
+    letter-spacing: 0.02em; transition: all 0.18s ease;
+    flex-shrink: 0;
+  }
+  .btn-change-pw:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+  /* ── TABS ── */
+  .tabs-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .tabs-header {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    font-family: 'Barlow', sans-serif;
+    font-size: 13.5px; font-weight: 600;
+    color: var(--text-muted);
+    padding: 14px 18px;
+    background: none; border: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.2s, border-color 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; padding: 24px; }
+  .tab-content.active { display: block; }
+
+  /* ── STAT CARD ── */
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .stat-label {
+    font-size: 12px; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 32px; font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  /* ── REPORTS SECTION ── */
+  .reports-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+  }
+
+  .reports-title {
+    font-size: 13px; font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+
+  .empty-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+    opacity: 0.3;
+    filter: grayscale(1);
+  }
+
+  /* ── PLAYERS TAB ── */
+  .players-empty {
+    text-align: center;
+    padding: 40px 0;
+  }
+
+  .players-empty-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    font-size: 22px;
+    opacity: 0.5;
+  }
+
+  .players-empty-text {
+    font-size: 13.5px; font-weight: 500;
+    color: var(--text-muted);
+  }
+
+
+  /* dynamic report/player rows kept from the MVC project */
+  .account-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .account-table th {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-align: left;
+    text-transform: uppercase;
+    padding: 10px 10px 14px 0;
+  }
+
+  .account-table td {
+    color: var(--text-dim);
+    font-size: 15px;
+    font-weight: 500;
+    padding: 10px 10px 10px 0;
+    vertical-align: top;
+  }
+
+  .account-table tr + tr td { border-top: 1px solid var(--border); }
+
+  .player-name { color: var(--text); font-weight: 700; line-height: 1.2; }
+  .player-meta { color: var(--text-dim); font-size: 13px; font-weight: 500; margin-top: 3px; }
+  .comment-cell { line-height: 1.35; }
+
+  .position-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: #111827;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .position-stack { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .players-card { padding: 22px 28px 24px; }
+  .players-table { table-layout: fixed; }
+  .players-table th { color: #7d879b; font-size: 14px; font-weight: 700; letter-spacing: 0; text-transform: none; padding: 18px 14px 14px 0; }
+  .players-table td { font-size: 15px; padding: 22px 14px 22px 0; vertical-align: middle; }
+  .players-table tr:first-child td { border-top: 1px solid var(--border); }
+  .players-table .player-name { font-size: 16px; line-height: 1.15; }
+  .player-age { color: var(--text-dim); }
+  .position-dash { color: var(--text); font-size: 15px; font-weight: 600; }
+  .foot-value { color: var(--text); font-size: 15px; font-weight: 500; text-transform: uppercase; }
+  .reports-cell { text-align: right; }
+
+  .report-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: #111827;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+  }</style>
+}
+
+@functions {
+  private static int? GetAge(DateTime? birthday)
+  {
+    if (!birthday.HasValue) return null;
+
+    var today = DateTime.Today;
+    var age = today.Year - birthday.Value.Year;
+    if (birthday.Value.Date > today.AddYears(-age)) age--;
+    return age;
+  }
+}
+
+@{
+  var fullName = $"{Model.Name} {Model.Surname}".Trim();
+  var displayName = string.IsNullOrWhiteSpace(fullName) ? Model.Username : fullName;
+}
+
+<main>
+
+  <!-- PROFILE HEADER -->
+  <div class="profile-header">
+    <div class="profile-avatar-wrap">
+      @{ string initials = ((Model.Name ?? "").Length > 0 ? Model.Name![0].ToString() : "") + ((Model.Surname ?? "").Length > 0 ? Model.Surname![0].ToString() : ""); }
+      <div class="profile-avatar">@(initials.Length > 0 ? initials.ToUpper() : Model.Username[..Math.Min(2,Model.Username.Length)].ToUpper())</div>
+      <div class="profile-status"></div>
+    </div>
+    <div class="profile-info">
+      <div class="profile-name">@displayName</div>
+      <div class="profile-role @(Model.Role == "ADMIN" ? "admin" : "scout")">
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
+        @(Model.Role == "ADMIN" ? "Administrator" : "Scout")
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO GRID -->
+  <div class="info-grid">
+    <div class="info-field">
+      <div class="info-label">First Name</div>
+      <div class="info-value @(string.IsNullOrEmpty(Model.Name) ? "empty" : "")">@(string.IsNullOrEmpty(Model.Name) ? "" : Model.Name)</div>
+    </div>
+    <div class="info-field">
+      <div class="info-label">Last Name</div>
+      <div class="info-value @(string.IsNullOrEmpty(Model.Surname) ? "empty" : "")">@(string.IsNullOrEmpty(Model.Surname) ? "" : Model.Surname)</div>
+    </div>
+    <div class="info-field">
+      <div class="info-label">Username</div>
+      <div class="info-value highlight">@Model.Username</div>
+    </div>
+    <div class="info-field">
+      <div class="info-label">Email</div>
+      <div class="info-value @(string.IsNullOrEmpty(Model.Email) ? "empty" : "")">@(string.IsNullOrEmpty(Model.Email) ? "" : Model.Email)</div>
+    </div>
+  </div>
+
+  <!-- SECURITY / CHANGE PASSWORD -->
+  <div class="security-card">
+    <div class="security-head">
+      <div class="security-head-left">
+        <div class="security-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="security-title">Password</div>
+          <div class="security-sub">Keep your account secure with a strong password.</div>
+        </div>
+      </div>
+      <a class="btn-change-pw" asp-controller="Auth" asp-action="ChangePassword">Change Password</a>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-wrapper">
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="switchTab('activities', this)">Activities</button>
+      <button class="tab-btn" onclick="switchTab('players', this)">Players</button>
+    </div>
+
+    <div class="tab-content active" id="tab-activities">
+      <div class="stat-card">
+        <div class="stat-label">Total Reports</div>
+        <div class="stat-value">@ViewBag.TotalReports</div>
+      </div>
+      <div class="reports-card">
+        <div class="reports-title">Reports</div>
+        @if (((dynamic)ViewBag.RecentReports).Count == 0)
+        {
+          <div class="empty-state"> No reports yet.</div>
+        }
+        else
+        {
+          <table class="account-table">
+            <thead>
+              <tr>
+                <th style="width: 28%;">Player</th>
+                <th>Player Profile Comments</th>
+                <th style="width: 12%;">Rating</th>
+                <th style="width: 18%;">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach (var r in (dynamic)ViewBag.RecentReports)
+              {
+                decimal rating = (decimal)r.Rating;
+                DateTime createdAt = (DateTime)r.CreatedAt;
+                DateTime? birthday = (DateTime?)r.Birthday;
+                var age = GetAge(birthday);
+                <tr>
+                  <td>
+                    <div class="player-name">@r.PlayerName</div>
+                    <div class="player-meta">@r.Position@(age.HasValue ? $" | Age {age}" : "")</div>
+                  </td>
+                  <td class="comment-cell">@r.Comments</td>
+                  <td><span class="player-name">@rating.ToString("0.#")</span></td>
+                  <td><span class="player-name">@createdAt.ToString("yyyy-MM-dd")</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-players">
+      <div class="stat-card">
+        <div class="stat-label">Total Players</div>
+        <div class="stat-value">@ViewBag.TotalPlayers</div>
+      </div>
+      <div class="reports-card players-card">
+        <div class="reports-title">Players</div>
+        @if (((dynamic)ViewBag.Players).Count == 0)
+        {
+          <div class="empty-state">
+            <a asp-controller="Player" asp-action="Dashboard" style="color:var(--accent-orange);font-weight:700;text-decoration:none;">Go to Dashboard</a>
+            &nbsp;to manage your players.
+          </div>
+        }
+        else
+        {
+          <table class="account-table players-table">
+            <thead>
+              <tr>
+                <th style="width: 32%;">Player</th>
+                <th style="width: 21%;">Main Position</th>
+                <th style="width: 22%;">Other Position</th>
+                <th style="width: 18%;">Foot</th>
+                <th style="width: 7%; text-align: right;">Reports</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach (var p in (dynamic)ViewBag.Players)
+              {
+                DateTime? birthday = (DateTime?)p.Birthday;
+                var age = GetAge(birthday);
+                string foot = string.IsNullOrWhiteSpace((string)p.Foot)
+                  ? "-"
+                  : ((string)p.Foot).ToUpperInvariant();
+                <tr>
+                  <td>
+                    <div class="player-name">
+                      @p.Name
+                      @if (age.HasValue)
+                      {
+                        <span class="player-age">(@age)</span>
+                      }
+                    </div>
+                    <div class="position-stack player-inline-pills">
+                      <span class="position-pill">@p.MainPosition</span>
+                      @if (!string.IsNullOrWhiteSpace((string)p.OtherPosition))
+                      {
+                        <span class="position-pill">@p.OtherPosition</span>
+                      }
+                    </div>
+                  </td>
+                  <td><span class="position-pill">@p.MainPosition</span></td>
+                  <td>
+                    @if (!string.IsNullOrWhiteSpace((string)p.OtherPosition))
+                    {
+                      <span class="position-pill">@p.OtherPosition</span>
+                    }
+                    else
+                    {
+                      <span class="position-dash">-</span>
+                    }
+                  </td>
+                  <td><span class="foot-value">@foot</span></td>
+                  <td class="reports-cell"><span class="report-count">@p.ReportCount</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  </div>
+
+</main>
+
+@section Scripts {
+<script>
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + id).classList.add('active');
+  }
+</script>
+}

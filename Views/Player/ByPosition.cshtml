@@ -1,0 +1,410 @@
+@model List<ScoutingAppMvc.Models.PlayerSummaryViewModel>
+@{
+    ViewData["Title"] = "Position: " + ViewBag.PosDisplay;
+    string posKey     = ViewBag.PosKey;
+    string posDisplay = ViewBag.PosDisplay;
+    bool   isAdmin    = ViewBag.IsAdmin;
+}
+
+@section Styles {
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --nav-bg: #0f1117;
+    --nav-border: #1e2230;
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface2: #1c2232;
+    --border: #232a3a;
+    --accent: oklch(62% 0.18 145);
+    --accent-orange: oklch(72% 0.19 40);
+    --accent-blue: oklch(56% 0.18 210);
+    --text: #e5e7eb;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --row-hover: rgba(255,255,255,0.03);
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+  }
+
+  /* ── NAVBAR ── */
+  nav {
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--nav-border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-username { font-weight: 700; font-size: 15px; color: var(--accent-orange); letter-spacing: 0.02em; }
+  .nav-badge {
+    background: oklch(58% 0.2 25); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .nav-right { display: flex; align-items: center; gap: 6px; }
+  .nav-link {
+    color: #9ca3af; font-size: 13.5px; font-weight: 500;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    text-decoration: none; background: none; border: none;
+  }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .nav-btn {
+    font-family: 'Barlow', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer;
+    letter-spacing: 0.02em; transition: all 0.18s ease; white-space: nowrap;
+  }
+  .btn-create { background: var(--accent-orange); color: #fff; }
+  .btn-create:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-search { background: var(--accent-blue); color: #fff; }
+  .btn-search:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-accounts { background: var(--accent); color: #fff; }
+  .btn-accounts:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-delete { background: oklch(58% 0.2 25); color: #fff; }
+  .btn-delete:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-logout { background: #374151; color: #e5e7eb; }
+  .btn-logout:hover { background: #4b5563; transform: translateY(-1px); }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px;
+    background: radial-gradient(ellipse at 50% 0%, #1a1f2e 0%, #0f1117 70%);
+  }
+
+  .page-card {
+    width: 100%;
+    max-width: 820px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  /* ── CARD HEADER ── */
+  .card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, rgba(72% 0.19 55 / 0.1) 0%, transparent 60%);
+    position: relative;
+  }
+
+  .card-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, oklch(72% 0.19 55), var(--accent-blue));
+    border-radius: 18px 18px 0 0;
+  }
+
+  .card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pos-icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: oklch(72% 0.19 55);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .card-subtitle {
+    font-size: 11px; font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 1px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .btn-back {
+    font-family: 'Barlow', sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    padding: 8px 16px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.18s ease;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-back:hover { background: var(--surface2); color: var(--text); }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; min-height: 180px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead tr { background: var(--surface2); }
+
+  th {
+    text-align: left;
+    padding: 11px 16px;
+    font-size: 10.5px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 13px 16px;
+    color: var(--text-dim);
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  tbody tr { transition: background 0.15s; cursor: pointer; }
+  tbody tr:hover { background: var(--row-hover); }
+  tbody tr.selected { background: oklch(56% 0.18 210 / 0.08); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.id-cell { color: var(--text-muted); font-size: 12px; width: 60px; }
+  td.name-cell { color: var(--text); font-weight: 600; }
+
+  .table-empty {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--text-muted);
+    font-size: 13px; font-weight: 500;
+    font-style: italic;
+  }
+
+  /* rating badge */
+  .rating-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 800;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .rating-badge.high { background: oklch(62% 0.18 145 / 0.15); border-color: oklch(62% 0.18 145 / 0.4); color: oklch(72% 0.16 145); }
+  .rating-badge.mid  { background: oklch(72% 0.19 40 / 0.15); border-color: oklch(72% 0.19 40 / 0.4); color: oklch(80% 0.17 40); }
+  .rating-badge.low  { background: oklch(58% 0.2 25 / 0.15); border-color: oklch(58% 0.2 25 / 0.4); color: oklch(72% 0.2 25); }
+
+  /* ── ACTION BAR ── */
+  .action-bar {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    flex-wrap: wrap;
+  }
+
+  .action-bar-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .action-bar-right { display: flex; align-items: center; gap: 8px; }
+
+  .action-btn {
+    font-family: 'Barlow', sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    padding: 8px 16px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-dim);
+    cursor: pointer; transition: all 0.18s ease;
+    white-space: nowrap; display: flex; align-items: center; gap: 6px;
+  }
+  .action-btn:hover { background: var(--surface2); color: var(--text); border-color: #3a4460; }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .action-btn.primary { background: var(--accent-blue); color: #fff; border-color: transparent; }
+  .action-btn.primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+  .action-btn.danger { background: oklch(58% 0.2 25); color: #fff; border-color: transparent; }
+  .action-btn.danger:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+  .action-btn.add { background: var(--accent); color: #fff; border-color: transparent; }
+  .action-btn.add:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+</style>
+}
+
+<main>
+  <div class="page-card">
+
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="pos-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-title">@posDisplay</div>
+          <div class="card-subtitle">@Model.Count player@(Model.Count != 1 ? "s" : "")</div>
+        </div>
+      </div>
+      <a class="btn-back" asp-controller="Player" asp-action="Dashboard">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back
+      </a>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Name</th><th>Scout</th><th>Rating</th><th>Last Review</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!Model.Any())
+          {
+            <tr><td colspan="5" class="table-empty">No players found for this position.</td></tr>
+          }
+          else
+          {
+            foreach (var p in Model)
+            {
+              string rc = p.AvgRating == 0 ? "" : (p.AvgRating <= 1.5m ? "r-high" : p.AvgRating <= 3m ? "r-mid" : "r-low");
+              <tr data-id="@p.Id" onclick="selectRow(this, @p.Id)">
+                <td class="id-cell">@p.Id</td>
+                <td class="name-cell">@p.Name</td>
+                <td>@p.ScoutName</td>
+                <td>
+                  @if (p.AvgRating > 0)
+                  {
+                    <span class="rating-badge @rc">@p.AvgRating.ToString("0.#")</span>
+                  }
+                  else
+                  {
+                    <span style="color:var(--text-muted);font-size:12px;"></span>
+                  }
+                </td>
+                <td><span class="last-review" title="@p.LastReview">@(string.IsNullOrEmpty(p.LastReview) ? "" : p.LastReview)</span></td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="action-bar">
+      <div class="action-bar-left">
+        <a class="action-btn add" asp-controller="Player" asp-action="Add" asp-route-position="@posKey">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Player
+        </a>
+        <a class="action-btn disabled" id="btn-edit">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </a>
+        <form id="delete-form" asp-controller="Player" asp-action="Delete" method="post" style="display:inline;">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" id="delete-id" value="0" />
+          <button type="button" class="action-btn danger disabled" id="btn-delete" onclick="confirmDelete()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
+            </svg>
+            Delete
+          </button>
+        </form>
+        <a class="action-btn disabled" id="btn-details">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Details
+        </a>
+        <a class="action-btn disabled" id="btn-comment">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          Edit Comment
+        </a>
+      </div>
+      <div class="action-bar-right">
+        <a class="action-btn" asp-controller="Player" asp-action="Dashboard">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Close
+        </a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+@section Scripts {
+<script>
+  let selectedId = null;
+  const baseEdit    = '@Url.Action("Edit",        "Player")';
+  const baseDetails = '@Url.Action("Details",     "Player")';
+  const baseComment = '@Url.Action("EditComment", "Report")';
+
+  function selectRow(row, id) {
+    document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+    if (selectedId === id) {
+      selectedId = null;
+      setButtons(false);
+    } else {
+      row.classList.add('selected');
+      selectedId = id;
+      document.getElementById('delete-id').value = id;
+      document.getElementById('btn-edit').href    = baseEdit    + '/' + id;
+      document.getElementById('btn-details').href = baseDetails + '/' + id;
+      document.getElementById('btn-comment').href = baseComment + '?playerId=' + id;
+      setButtons(true);
+    }
+  }
+
+  function setButtons(on) {
+    ['btn-edit','btn-delete','btn-details','btn-comment'].forEach(bid => {
+      document.getElementById(bid).classList.toggle('disabled', !on);
+    });
+  }
+
+  function confirmDelete() {
+    if (selectedId && confirm('Delete this player?')) document.getElementById('delete-form').submit();
+  }
+</script>
+}
+
+

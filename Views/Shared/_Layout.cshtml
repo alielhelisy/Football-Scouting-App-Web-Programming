@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Scouting App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --nav-bg: #0f1117; --nav-border: #1e2230; --bg: #0f1117;
+        --surface: #161b27; --surface2: #1c2232; --surface3: #111622;
+        --border: #232a3a;
+        --accent: oklch(62% 0.18 145);
+        --accent-orange: oklch(72% 0.19 40);
+        --accent-blue: oklch(56% 0.18 210);
+        --text: #e5e7eb; --text-muted: #6b7280; --text-dim: #9ca3af;
+        --input-bg: #1c2232; --input-border: #2a3245;
+        --input-focus: oklch(56% 0.18 210);
+        --row-hover: rgba(255,255,255,0.03);
+        --success-bg: oklch(62% 0.18 145 / 0.12);
+        --success-border: oklch(62% 0.18 145 / 0.3);
+        --success-text: oklch(72% 0.16 145);
+        --error-bg: oklch(58% 0.2 25 / 0.12);
+        --error-border: oklch(58% 0.2 25 / 0.3);
+        --error-text: oklch(72% 0.2 25);
+      }
+      body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+      a,
+      a:visited,
+      a:hover,
+      a:focus,
+      a:active,
+      a *,
+      button,
+      button:hover,
+      button:focus {
+        text-decoration: none !important;
+      }
+
+      /*  NAVBAR  */
+      nav.app-nav {
+        background: var(--nav-bg); border-bottom: 1px solid var(--nav-border);
+        padding: 0 28px; height: 56px;
+        display: flex; align-items: center; justify-content: space-between;
+        position: sticky; top: 0; z-index: 100;
+      }
+      .nav-left { display: flex; align-items: center; gap: 10px; }
+      .nav-username { font-weight: 700; font-size: 15px; color: var(--accent-orange); letter-spacing: 0.02em; }
+      .nav-badge {
+        color: #fff; font-size: 10px; font-weight: 700;
+        padding: 3px 8px; border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase;
+      }
+      .nav-badge.admin { background: oklch(58% 0.2 25); }
+      .nav-badge.scout { background: oklch(56% 0.18 210); }
+      .nav-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .nav-link {
+        color: #9ca3af; font-size: 13.5px; font-weight: 500;
+        padding: 6px 12px; border-radius: 6px; cursor: pointer;
+        transition: color 0.2s, background 0.2s;
+        text-decoration: none; background: none; border: none; font-family: 'Barlow', sans-serif;
+      }
+      .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+      .nav-btn {
+        font-family: 'Barlow', sans-serif; font-size: 12.5px; font-weight: 600;
+        padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer;
+        letter-spacing: 0.02em; transition: all 0.18s ease; white-space: nowrap; text-decoration: none;
+        display: inline-flex; align-items: center;
+      }
+      .nav-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+      .btn-create  { background: var(--accent-orange); color: #fff; }
+      .btn-search  { background: var(--accent-blue);   color: #fff; }
+      .btn-accounts{ background: var(--accent);         color: #fff; }
+      .btn-delete  { background: oklch(58% 0.2 25);    color: #fff; }
+      .btn-logout  { background: #374151; color: #e5e7eb; }
+      .btn-logout:hover { background: #4b5563; }
+
+      /*  TOAST NOTIFICATIONS  */
+      .toast-wrap {
+        position: fixed; top: 66px; left: 50%; transform: translateX(-50%);
+        z-index: 999; display: flex; flex-direction: column; gap: 8px;
+      }
+      .toast {
+        border-radius: 10px; padding: 10px 16px;
+        display: flex; align-items: center; gap: 10px;
+        font-size: 13px; font-weight: 500;
+        animation: slideDown 0.3s ease;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        white-space: nowrap;
+      }
+      .toast-success {
+        background: var(--success-bg);
+        border: 1px solid var(--success-border);
+        color: var(--success-text);
+      }
+      .toast-error {
+        background: var(--error-bg);
+        border: 1px solid var(--error-border);
+        color: var(--error-text);
+      }
+      .toast-icon {
+        width: 20px; height: 20px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+      .toast-success .toast-icon { background: var(--accent); }
+      .toast-error   .toast-icon { background: oklch(58% 0.2 25); }
+      .toast-close {
+        margin-left: auto; background: none; border: none; cursor: pointer;
+        color: inherit; opacity: 0.6; font-size: 16px; line-height: 1;
+        transition: opacity 0.15s; padding: 2px 4px;
+      }
+      .toast-close:hover { opacity: 1; }
+      @@keyframes slideDown {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <nav class="app-nav">
+        <div class="nav-left">
+            <span class="nav-username">@User.Identity.Name</span>
+            <span class="nav-badge @(User.IsInRole("ADMIN") ? "admin" : "scout")">@(User.IsInRole("ADMIN") ? "Admin" : "Scout")</span>
+        </div>
+        <div class="nav-right">
+            <a class="nav-link" asp-controller="Player" asp-action="Dashboard">Home</a>
+            <a class="nav-link" asp-controller="Auth" asp-action="Account">Account</a>
+            <a class="nav-link" asp-controller="Report" asp-action="Index">Reports</a>
+            <a class="nav-btn btn-search btn-search-nav" asp-controller="Search" asp-action="Index">Search</a>
+            @if (User.IsInRole("ADMIN"))
+            {
+                <a class="nav-btn btn-accounts btn-accounts-nav" asp-controller="Admin" asp-action="Accounts">Accounts</a>
+            }
+            <form asp-controller="Auth" asp-action="DeleteAccount" method="post" class="d-inline"
+                  onsubmit="return confirm('Delete your account?')">
+                <button type="submit" class="nav-btn btn-delete btn-delete-nav">Delete Account</button>
+            </form>
+            <a class="nav-btn btn-logout btn-logout-nav" asp-controller="Auth" asp-action="Logout">Logout</a>
+        </div>
+    </nav>
+}
+
+@if (TempData["Success"] != null || TempData["Error"] != null)
+{
+    <div class="toast-wrap" id="toastWrap">
+        @if (TempData["Success"] != null)
+        {
+            <div class="toast toast-success">
+                <div class="toast-icon">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                @TempData["Success"]
+                <button class="toast-close" onclick="this.closest('.toast').remove()"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="toast toast-error">
+                <div class="toast-icon">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+                @TempData["Error"]
+                <button class="toast-close" onclick="this.closest('.toast').remove()"></button>
+            </div>
+        }
+    </div>
+    <script>setTimeout(() => { const w = document.getElementById('toastWrap'); if(w) w.remove(); }, 5000);</script>
+}
+
+@RenderBody()
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+

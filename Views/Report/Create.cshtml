@@ -1,0 +1,399 @@
+@model ScoutingAppMvc.Models.Report
+@{
+    bool isEdit       = ViewBag.IsEdit == true;
+    ViewData["Title"] = isEdit ? "Edit Report" : "Create Report";
+    var players      = (List<ScoutingAppMvc.Models.Player>)ViewBag.Players;
+    var positions    = (Dictionary<string,string>)ViewBag.Positions;
+    var cardOpts     = (List<string>)ViewBag.CardOptions;
+    var ratingOpts   = (List<decimal>)ViewBag.RatingOptions;
+    var ratingDescs  = (Dictionary<decimal,string>)ViewBag.RatingDescriptions;
+    int? presetId    = ViewBag.PresetPlayerId;
+    int? selectedPlayerId = isEdit ? Model.PlayerId : presetId;
+}
+
+@section Styles {
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --nav-bg: #0f1117;
+    --nav-border: #1e2230;
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface2: #1c2232;
+    --border: #232a3a;
+    --accent: oklch(62% 0.18 145);
+    --accent-orange: oklch(72% 0.19 40);
+    --accent-blue: oklch(56% 0.18 210);
+    --text: #e5e7eb;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --input-bg: #1c2232;
+    --input-border: #2a3245;
+    --input-focus: oklch(56% 0.18 210);
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+  }
+
+  /* ── NAVBAR ── */
+  nav {
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--nav-border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-username { font-weight: 700; font-size: 15px; color: var(--accent-orange); letter-spacing: 0.02em; }
+  .nav-badge {
+    background: oklch(58% 0.2 25); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .nav-right { display: flex; align-items: center; gap: 6px; }
+  .nav-link {
+    color: #9ca3af; font-size: 13.5px; font-weight: 500;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    text-decoration: none; background: none; border: none;
+  }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .nav-btn {
+    font-family: 'Barlow', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer;
+    letter-spacing: 0.02em; transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .btn-create { background: var(--accent-orange); color: #fff; }
+  .btn-create:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-search { background: var(--accent-blue); color: #fff; }
+  .btn-search:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-accounts { background: var(--accent); color: #fff; }
+  .btn-accounts:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-delete { background: oklch(58% 0.2 25); color: #fff; }
+  .btn-delete:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-logout { background: #374151; color: #e5e7eb; }
+  .btn-logout:hover { background: #4b5563; transform: translateY(-1px); }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    background: radial-gradient(ellipse at 50% 0%, #1a1f2e 0%, #0f1117 70%);
+  }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    width: 100%;
+    max-width: 560px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  .form-header {
+    padding: 22px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(45,106,53,0.18) 0%, transparent 60%);
+    position: relative;
+  }
+
+  .form-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-blue));
+    border-radius: 18px 18px 0 0;
+  }
+
+  .form-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .form-title-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.85;
+  }
+
+  .form-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+
+  /* ── FORM FIELDS ── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .field-row .field { }
+
+  input[type="number"],
+  input[type="text"],
+  select,
+  textarea {
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    width: 100%;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  select option { background: #1c2232; color: var(--text); }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.5;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px oklch(56% 0.18 210 / 0.15);
+  }
+
+  input::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+  /* ── FORM FOOTER ── */
+  .form-footer {
+    padding: 18px 28px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--surface2);
+  }
+
+  .btn-cancel {
+    font-family: 'Barlow', sans-serif;
+    font-size: 13.5px; font-weight: 600;
+    padding: 9px 20px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.18s ease;
+    letter-spacing: 0.02em;
+  }
+  .btn-cancel:hover { background: var(--surface); color: var(--text); border-color: #3a4460; }
+
+  .btn-save {
+    font-family: 'Barlow', sans-serif;
+    font-size: 13.5px; font-weight: 700;
+    padding: 9px 22px; border-radius: 8px;
+    border: none;
+    background: var(--accent-blue); color: #fff;
+    cursor: pointer; transition: all 0.18s ease;
+    letter-spacing: 0.03em;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .btn-save:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0 4px 14px oklch(56% 0.18 210 / 0.35); }
+  .btn-save:active { transform: translateY(0); }
+
+  .btn-save svg { flex-shrink: 0; }
+
+</style>
+}
+
+<main>
+  <div class="form-card">
+    <div class="form-header">
+      <div class="form-title">
+        <div class="form-title-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </div>
+        @(isEdit ? "Edit Report" : "Create Report")
+      </div>
+    </div>
+
+    <form action="@(isEdit ? Url.Action("Edit", "Report", new { id = Model.Id }) : Url.Action("Create", "Report"))" method="post">
+      @Html.AntiForgeryToken()
+      <div class="form-body">
+
+        <div class="field">
+          <label class="field-label">Player</label>
+          <select name="playerId" required disabled="@isEdit">
+            @if (!selectedPlayerId.HasValue)
+            {
+              <option value="" disabled selected>Select a player</option>
+            }
+            else
+            {
+              <option value="" disabled>Select a player</option>
+            }
+            @foreach (var p in players)
+            {
+              if (selectedPlayerId.HasValue && selectedPlayerId.Value == p.Id)
+              {
+                <option value="@p.Id" selected>@p.Name (@(p.User?.Username ?? ""))</option>
+              }
+              else
+              {
+                <option value="@p.Id">@p.Name (@(p.User?.Username ?? ""))</option>
+              }
+            }
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Rating</label>
+            <select name="rating" required>
+              @if (isEdit)
+              {
+                <option value="" disabled>Select</option>
+              }
+              else
+              {
+                <option value="" disabled selected>Select</option>
+              }
+              @foreach (var r in ratingOpts)
+              {
+                var desc = ratingDescs.GetValueOrDefault(r, "");
+                if (isEdit && Model.Rating == r)
+                {
+                  <option value="@r" selected>@r@(string.IsNullOrEmpty(desc) ? "" : "  " + desc)</option>
+                }
+                else
+                {
+                  <option value="@r">@r@(string.IsNullOrEmpty(desc) ? "" : "  " + desc)</option>
+                }
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Minutes</label>
+            <input type="number" name="minutesPlayed" value="@(isEdit ? Model.MinutesPlayed : 90)" min="0" max="120" />
+          </div>
+          <div class="field">
+            <label class="field-label">Goals</label>
+            <input type="number" name="goalsScored" value="@(isEdit ? Model.GoalsScored : 0)" min="0" />
+          </div>
+          <div class="field">
+            <label class="field-label">Cards</label>
+            <select name="receivedCards">
+              @foreach (var c in cardOpts)
+              {
+                if (isEdit && string.Equals(Model.ReceivedCards, c, StringComparison.OrdinalIgnoreCase))
+                {
+                  <option value="@c" selected>@c</option>
+                }
+                else
+                {
+                  <option value="@c">@c</option>
+                }
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Rated Position</label>
+          <select name="ratedPosition" required>
+            @if (isEdit)
+            {
+              <option value="" disabled>Select</option>
+            }
+            else
+            {
+              <option value="" disabled selected>Select</option>
+            }
+            @foreach (var pos in positions)
+            {
+              if (isEdit && string.Equals(Model.RatedPosition, pos.Key, StringComparison.OrdinalIgnoreCase))
+              {
+                <option value="@pos.Key" selected>@pos.Value</option>
+              }
+              else
+              {
+                <option value="@pos.Key">@pos.Value</option>
+              }
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Player Profile Comments</label>
+          <textarea name="comments" placeholder="Add your scouting notes here...">@(isEdit ? Model.Comments : "")</textarea>
+        </div>
+
+      </div>
+      <div class="form-footer">
+        @if (isEdit)
+        {
+          <a class="btn-cancel" asp-controller="Player" asp-action="Details" asp-route-id="@Model.PlayerId">Cancel</a>
+        }
+        else
+        {
+          <a class="btn-cancel" asp-controller="Player" asp-action="Dashboard">Cancel</a>
+        }
+        <button type="submit" class="btn-save">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          @(isEdit ? "Save Changes" : "Save Report")
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+
+

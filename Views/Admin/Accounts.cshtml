@@ -1,0 +1,396 @@
+@{ ViewData["Title"] = "Accounts"; }
+
+@section Styles {
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --nav-bg: #0f1117;
+    --nav-border: #1e2230;
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface2: #1c2232;
+    --border: #232a3a;
+    --accent: oklch(62% 0.18 145);
+    --accent-orange: oklch(72% 0.19 40);
+    --accent-blue: oklch(56% 0.18 210);
+    --text: #e5e7eb;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --input-bg: #1c2232;
+    --input-border: #2a3245;
+    --row-hover: rgba(255,255,255,0.03);
+    --success-bg: oklch(62% 0.18 145 / 0.12);
+    --success-border: oklch(62% 0.18 145 / 0.3);
+    --success-text: oklch(72% 0.16 145);
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+  }
+
+  /* ── NAVBAR ── */
+  nav {
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--nav-border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-username { font-weight: 700; font-size: 15px; color: var(--accent-orange); letter-spacing: 0.02em; }
+  .nav-badge {
+    background: oklch(58% 0.2 25); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .nav-right { display: flex; align-items: center; gap: 6px; }
+  .nav-link {
+    color: #9ca3af; font-size: 13.5px; font-weight: 500;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    text-decoration: none; background: none; border: none;
+  }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .nav-btn {
+    font-family: 'Barlow', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer;
+    letter-spacing: 0.02em; transition: all 0.18s ease; white-space: nowrap;
+  }
+  .btn-create { background: var(--accent-orange); color: #fff; }
+  .btn-create:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-search { background: var(--accent-blue); color: #fff; }
+  .btn-search:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-accounts { background: var(--accent); color: #fff; }
+  .btn-accounts:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-delete { background: oklch(58% 0.2 25); color: #fff; }
+  .btn-delete:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-logout { background: #374151; color: #e5e7eb; }
+  .btn-logout:hover { background: #4b5563; transform: translateY(-1px); }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px;
+    background: radial-gradient(ellipse at 50% 0%, #1a1f2e 0%, #0f1117 70%);
+  }
+
+  .page-wrap {
+    width: 100%;
+    max-width: 920px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── SUCCESS TOAST ── */
+  .toast {
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--success-text);
+    animation: slideDown 0.3s ease;
+    white-space: nowrap;
+  }
+
+  @@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .toast-icon {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .toast-close {
+    margin-left: auto;
+    background: none; border: none; cursor: pointer;
+    color: var(--success-text); opacity: 0.6;
+    font-size: 16px; line-height: 1;
+    transition: opacity 0.15s;
+    padding: 2px 4px;
+  }
+  .toast-close:hover { opacity: 1; }
+
+  /* ── ACCOUNTS CARD ── */
+  .accounts-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  .accounts-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, rgba(56,100,180,0.08) 0%, transparent 60%);
+    position: relative;
+  }
+
+  .accounts-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-blue));
+    border-radius: 18px 18px 0 0;
+  }
+
+  .accounts-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+
+  .btn-add-account {
+    font-family: 'Barlow', sans-serif;
+    font-size: 12.5px; font-weight: 700;
+    padding: 8px 16px; border-radius: 8px;
+    border: none;
+    background: var(--accent-blue); color: #fff;
+    cursor: pointer; transition: all 0.18s ease;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-add-account:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+  .btn-back {
+    font-family: 'Barlow', sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    padding: 8px 16px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.18s ease;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-back:hover { background: var(--surface2); color: var(--text); }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead tr { background: var(--surface2); }
+
+  th {
+    text-align: left;
+    padding: 11px 12px;
+    font-size: 10.5px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: middle;
+  }
+
+  tbody tr { transition: background 0.15s; }
+  tbody tr:hover { background: var(--row-hover); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.id-cell { color: var(--text-muted); font-size: 12px; }
+  td.name-cell { color: var(--text); font-weight: 600; }
+  td.email-cell { font-size: 13px; }
+
+  /* ── ROLE SELECT ── */
+  .role-wrap { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+  .role-select {
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px; font-weight: 700;
+    color: var(--text);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 7px;
+    padding: 6px 24px 6px 8px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.18s;
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 80px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+  }
+  .role-select:focus { border-color: var(--accent-blue); }
+  .role-select option { background: #1c2232; }
+
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px; font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .role-badge.scout { background: oklch(56% 0.18 210 / 0.15); color: oklch(70% 0.16 210); border: 1px solid oklch(56% 0.18 210 / 0.3); }
+  .role-badge.admin { background: oklch(58% 0.2 25 / 0.15); color: oklch(72% 0.2 25); border: 1px solid oklch(58% 0.2 25 / 0.3); }
+
+  /* ── PLAYERS COUNT ── */
+  .players-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 800;
+    color: var(--text);
+  }
+
+  /* ── ROW ACTIONS ── */
+  .btn-save-role {
+    font-family: 'Barlow', sans-serif;
+    font-size: 11.5px; font-weight: 700;
+    padding: 6px 12px; border-radius: 6px;
+    border: none;
+    background: var(--accent-blue); color: #fff;
+    cursor: pointer; transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .btn-save-role:hover { filter: brightness(1.12); }
+
+  .btn-delete-row {
+    font-family: 'Barlow', sans-serif;
+    font-size: 11.5px; font-weight: 700;
+    padding: 6px 12px; border-radius: 6px;
+    border: none;
+    background: oklch(58% 0.2 25); color: #fff;
+    cursor: pointer; transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .btn-delete-row:hover { filter: brightness(1.12); }
+
+  .actions-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+</style>
+}
+
+<main>
+  <div class="page-wrap">
+
+    <div class="accounts-card">
+      <div class="accounts-header">
+        <div class="accounts-title">Accounts</div>
+        <div class="header-actions">
+          <a class="btn-add-account" asp-controller="Admin" asp-action="AddAccount">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Account
+          </a>
+          <a class="btn-back" asp-controller="Player" asp-action="Dashboard">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back
+          </a>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Players</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (dynamic u in (dynamic)Model)
+            {
+              bool isMainAdmin = u.IsMainAdmin;
+              <tr>
+                <td class="id-cell">@u.Id</td>
+                <td class="name-cell">@u.Username</td>
+                <td>@((string)u.Name + " " + (string)u.Surname)</td>
+                <td class="email-cell">@(string.IsNullOrEmpty((string)u.Email) ? "" : (string)u.Email)</td>
+                <td>
+                  @if (isMainAdmin)
+                  {
+                    <div class="role-wrap">
+                      <span class="role-badge admin">ADMIN</span>
+                      <span class="protected-note">Protected</span>
+                    </div>
+                  }
+                  else
+                  {
+                    <form asp-controller="Admin" asp-action="UpdateRole" asp-route-userId="@u.Id" method="post" class="role-wrap">
+                      @Html.AntiForgeryToken()
+                      <select name="role" class="role-select">
+                        @if ((string)u.Role == "SCOUT") {
+                          <option value="SCOUT" selected>SCOUT</option>
+                          <option value="ADMIN">ADMIN</option>
+                        } else {
+                          <option value="SCOUT">SCOUT</option>
+                          <option value="ADMIN" selected>ADMIN</option>
+                        }
+                      </select>
+                      <button type="submit" class="btn-save-role">Save</button>
+                    </form>
+                  }
+                </td>
+                <td><span class="players-count">@u.PlayerCount</span></td>
+                <td>
+                  @if (!isMainAdmin)
+                  {
+                    <form asp-controller="Admin" asp-action="DeleteAccount" asp-route-userId="@u.Id" method="post"
+                          onsubmit="return confirm('Delete account @u.Username?')">
+                      @Html.AntiForgeryToken()
+                      <div class="actions-cell">
+                        <button type="submit" class="btn-delete-row">Delete</button>
+                      </div>
+                    </form>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+
+
