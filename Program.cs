@@ -9,7 +9,12 @@ using System.Globalization;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 10,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null)));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -32,24 +37,31 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    // Apply any pending migrations (creates the DB if it doesn't exist)
-    db.Database.Migrate();
-
-    // Seed the default admin account if it doesn't exist
-    if (!db.Users.Any(u => u.Username == "admin"))
+    try
     {
-        db.Users.Add(new User
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Apply any pending migrations (creates the DB if it doesn't exist)
+        db.Database.Migrate();
+
+        // Seed the default admin account if it doesn't exist
+        if (!db.Users.Any(u => u.Username == "admin"))
         {
-            Username = "admin",
-            Name     = "Admin",
-            Surname  = "User",
-            Email    = "admin@scouting.com",
-            PasswordHash = HashHelper.Hash("admin123"),
-            Role     = "ADMIN"
-        });
-        db.SaveChanges();
+            db.Users.Add(new User
+            {
+                Username = "admin",
+                Name     = "Admin",
+                Surname  = "User",
+                Email    = "admin@scouting.com",
+                PasswordHash = HashHelper.Hash("admin123"),
+                Role     = "ADMIN"
+            });
+            db.SaveChanges();
+        }
+    }
+    catch (Exception ex) when (!app.Environment.IsDevelopment())
+    {
+        Console.WriteLine($"Database startup check skipped: {ex.Message}");
     }
 }
 
@@ -74,4 +86,3 @@ app.MapControllerRoute(
     pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();
-
