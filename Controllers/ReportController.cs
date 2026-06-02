@@ -36,9 +36,16 @@ public class ReportController : Controller
 
     public IActionResult Index()
     {
-        var reports = _db.Reports
+        var query = _db.Reports
             .Include(r => r.Player).ThenInclude(p => p.User)
-            .Where(r => r.Player.UserId == CurrentUserId)
+            .AsQueryable();
+
+        if (!IsAdmin)
+        {
+            query = query.Where(r => r.Player.UserId == CurrentUserId);
+        }
+
+        var reports = query
             .OrderByDescending(r => r.CreatedAt)
             .ToList();
         ViewBag.Positions = ScoutingConstants.Positions;
