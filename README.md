@@ -4,10 +4,16 @@ An ASP.NET Core MVC web application for managing football scouting work. The app
 
 ## Demo
 
-Project demo link:
+Live project demo:
 
 ```text
 http://scoutingapp76658.azurewebsites.net
+```
+
+GitHub source code:
+
+```text
+https://github.com/alielhelisy/Football-Scouting-App-Web-Programming
 ```
 
 ## Features
@@ -16,8 +22,10 @@ http://scoutingapp76658.azurewebsites.net
 - Main admin protection
 - Player dashboard grouped by tactical position
 - Add, edit, view, and delete players
+- Admin view of all players and reports
 - Search players by name, club, and position
 - Create, edit, and delete scouting reports
+- Reports page with search, position filter, rating filter, and sorting
 - Report history on each player profile
 - Account page with activity and player summaries
 - Change password page
@@ -28,6 +36,8 @@ http://scoutingapp76658.azurewebsites.net
 - ASP.NET Core MVC
 - Entity Framework Core
 - SQL Server / SQL Server Express
+- Azure App Service
+- Azure SQL Database
 - Razor views
 - Cookie authentication
 
@@ -68,3 +78,9 @@ Password: admin123
 ```
 
 Change the password after the first login.
+
+## Deployment
+
+The deployed demo is hosted on Azure App Service and uses Azure SQL Database for the online database.
+
+For course submission, include the live demo link, the GitHub source code link, and a separate presentation/video link in the project report.
