@@ -286,13 +286,18 @@
       <table>
         <thead>
           <tr>
-            <th>ID</th><th>Name</th><th>Scout</th><th>Rating</th><th>Last Review</th>
+            <th>ID</th><th>Name</th>
+            @if (isAdmin)
+            {
+              <th>Added By</th>
+            }
+            <th>Rating</th><th>Last Review</th>
           </tr>
         </thead>
         <tbody>
           @if (!Model.Any())
           {
-            <tr><td colspan="5" class="table-empty">No players found for this position.</td></tr>
+            <tr><td colspan="@(isAdmin ? 5 : 4)" class="table-empty">No players found for this position.</td></tr>
           }
           else
           {
@@ -302,7 +307,10 @@
               <tr data-id="@p.Id" onclick="selectRow(this, @p.Id)">
                 <td class="id-cell">@p.Id</td>
                 <td class="name-cell">@p.Name</td>
-                <td>@p.ScoutName</td>
+                @if (isAdmin)
+                {
+                  <td>@p.ScoutName</td>
+                }
                 <td>
                   @if (p.AvgRating > 0)
                   {
@@ -329,34 +337,11 @@
           </svg>
           Add Player
         </a>
-        <a class="action-btn disabled" id="btn-edit">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-          Edit
-        </a>
-        <form id="delete-form" asp-controller="Player" asp-action="Delete" method="post" style="display:inline;">
-          @Html.AntiForgeryToken()
-          <input type="hidden" name="id" id="delete-id" value="0" />
-          <button type="button" class="action-btn danger disabled" id="btn-delete" onclick="confirmDelete()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
-            </svg>
-            Delete
-          </button>
-        </form>
         <a class="action-btn disabled" id="btn-details">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           Details
-        </a>
-        <a class="action-btn disabled" id="btn-comment">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          Edit Comment
         </a>
       </div>
       <div class="action-bar-right">
@@ -375,9 +360,7 @@
 @section Scripts {
 <script>
   let selectedId = null;
-  const baseEdit    = '@Url.Action("Edit",        "Player")';
   const baseDetails = '@Url.Action("Details",     "Player")';
-  const baseComment = '@Url.Action("EditComment", "Report")';
 
   function selectRow(row, id) {
     document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
@@ -387,22 +370,15 @@
     } else {
       row.classList.add('selected');
       selectedId = id;
-      document.getElementById('delete-id').value = id;
-      document.getElementById('btn-edit').href    = baseEdit    + '/' + id;
       document.getElementById('btn-details').href = baseDetails + '/' + id;
-      document.getElementById('btn-comment').href = baseComment + '?playerId=' + id;
       setButtons(true);
     }
   }
 
   function setButtons(on) {
-    ['btn-edit','btn-delete','btn-details','btn-comment'].forEach(bid => {
+    ['btn-details'].forEach(bid => {
       document.getElementById(bid).classList.toggle('disabled', !on);
     });
-  }
-
-  function confirmDelete() {
-    if (selectedId && confirm('Delete this player?')) document.getElementById('delete-form').submit();
   }
 </script>
 }
