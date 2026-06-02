@@ -2,6 +2,14 @@
 
 An ASP.NET Core MVC web application for managing football scouting work. The app lets scouts create player profiles, organize players by position, write scouting reports, search players, and manage user accounts with admin/scout roles.
 
+## Demo
+
+Project demo link:
+
+```text
+http://scoutingapp76658.azurewebsites.net
+```
+
 ## Features
 
 - User authentication with admin and scout roles
@@ -60,4 +68,3 @@ Password: admin123
 ```
 
 Change the password after the first login.
-
