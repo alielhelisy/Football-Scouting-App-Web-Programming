@@ -10,23 +10,46 @@ var builder = WebApplication.CreateBuilder(args);
 
 var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
 var useSqlite = string.Equals(databaseProvider, "Sqlite", StringComparison.OrdinalIgnoreCase);
+var sqlitePath = string.Empty;
+
+if (useSqlite)
+{
+    sqlitePath = builder.Configuration["SqliteDatabasePath"];
+    if (string.IsNullOrWhiteSpace(sqlitePath))
+    {
+        var homePath = Environment.GetEnvironmentVariable("HOME");
+        var dataDir = string.IsNullOrWhiteSpace(homePath)
+            ? AppContext.BaseDirectory
+            : Path.Combine(homePath, "data");
+
+        Directory.CreateDirectory(dataDir);
+        sqlitePath = Path.Combine(dataDir, "scoutingapp.db");
+    }
+    else
+    {
+        var sqliteDir = Path.GetDirectoryName(sqlitePath);
+        if (!string.IsNullOrWhiteSpace(sqliteDir))
+        {
+            Directory.CreateDirectory(sqliteDir);
+        }
+    }
+
+    var shouldResetFromBundle = string.Equals(
+        builder.Configuration["SqliteResetFromBundle"],
+        "true",
+        StringComparison.OrdinalIgnoreCase);
+    var bundledDatabasePath = Path.Combine(builder.Environment.ContentRootPath, "scoutingapp-import.db");
+
+    if (shouldResetFromBundle && File.Exists(bundledDatabasePath))
+    {
+        File.Copy(bundledDatabasePath, sqlitePath, overwrite: true);
+    }
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (useSqlite)
     {
-        var sqlitePath = builder.Configuration["SqliteDatabasePath"];
-        if (string.IsNullOrWhiteSpace(sqlitePath))
-        {
-            var homePath = Environment.GetEnvironmentVariable("HOME");
-            var dataDir = string.IsNullOrWhiteSpace(homePath)
-                ? AppContext.BaseDirectory
-                : Path.Combine(homePath, "data");
-
-            Directory.CreateDirectory(dataDir);
-            sqlitePath = Path.Combine(dataDir, "scoutingapp.db");
-        }
-
         options.UseSqlite($"Data Source={sqlitePath}");
     }
     else
