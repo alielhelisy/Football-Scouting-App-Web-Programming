@@ -1,86 +1,132 @@
 # Football Scouting App
 
-An ASP.NET Core MVC web application for managing football scouting work. The app lets scouts create player profiles, organize players by position, write scouting reports, search players, and manage user accounts with admin/scout roles.
+Football Scouting App is an ASP.NET Core MVC web application designed to support football scouting workflows. The system allows scouts to manage player profiles, record match reports, evaluate players by tactical position, and review scouting activity through a clean role-based interface.
 
-## Demo
+## Live Demo
 
-Live project demo:
+- Demo: [http://scoutingapp76658.azurewebsites.net](http://scoutingapp76658.azurewebsites.net)
+- Source code: [https://github.com/alielhelisy/Football-Scouting-App-Web-Programming](https://github.com/alielhelisy/Football-Scouting-App-Web-Programming)
 
-```text
-http://scoutingapp76658.azurewebsites.net
-```
+## Main Features
 
-GitHub source code:
-
-```text
-https://github.com/alielhelisy/Football-Scouting-App-Web-Programming
-```
-
-## Features
-
-- User authentication with admin and scout roles
-- Main admin protection
-- Player dashboard grouped by tactical position
-- Add, edit, view, and delete players
-- Admin view of all players and reports
-- Search players by name, club, and position
+- Secure login and account creation
+- Role-based access for admins and scouts
+- Protected main admin account
+- Player dashboard organized by tactical positions
+- Player profile pages with personal, football, and report information
+- Add, edit, view, and delete player records
 - Create, edit, and delete scouting reports
+- Report history for each player
 - Reports page with search, position filter, rating filter, and sorting
-- Report history on each player profile
-- Account page with activity and player summaries
-- Change password page
+- Player search by name, club, and position
 - Admin account management
+- Account page with activity and player summaries
+- Change password page with password visibility controls
+
+## User Roles
+
+### Admin
+
+Admins can manage accounts, view all players and reports, and access administrative pages. The main admin account is protected so other admins cannot change or delete it.
+
+### Scout
+
+Scouts can create and manage their own players and reports. They can search players, view player details, and maintain their own scouting activity.
 
 ## Tech Stack
 
-- ASP.NET Core MVC
+- ASP.NET Core MVC (.NET 10)
 - Entity Framework Core
-- SQL Server / SQL Server Express
+- SQL Server / SQL Server Express for local development
+- SQLite support for lightweight hosted deployment
+- Razor Views
+- Cookie Authentication
 - Azure App Service
-- Azure SQL Database
-- Razor views
-- Cookie authentication
+- HTML, CSS, and JavaScript
 
-## Requirements
+## Project Structure
+
+```text
+Controllers/   MVC controllers for authentication, players, reports, search, and admin pages
+Data/          Entity Framework database context
+Helpers/       Shared helper logic such as password hashing
+Models/        Application domain models
+Views/         Razor views for the user interface
+wwwroot/       Static assets
+Program.cs     Application startup, database configuration, and routing
+```
+
+## Local Setup
+
+### Requirements
 
 - .NET 10 SDK
 - SQL Server Express or another SQL Server instance
 
-## Setup
+### Run Locally
 
-1. Update the connection string in `appsettings.json` if your SQL Server name is different.
+1. Clone the repository.
 
-2. Restore packages:
+   ```bash
+   git clone https://github.com/alielhelisy/Football-Scouting-App-Web-Programming.git
+   cd Football-Scouting-App-Web-Programming
+   ```
+
+2. Check the database connection string in `appsettings.json`.
+
+   ```json
+   "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=ScoutingAppWeb;Trusted_Connection=True;TrustServerCertificate=True;"
+   ```
+
+3. Restore packages.
 
    ```bash
    dotnet restore
    ```
 
-3. Run the app:
+4. Run the application.
 
    ```bash
    dotnet run
    ```
 
-4. Open the local URL shown in the terminal, for example:
+5. Open the local URL shown in the terminal, for example:
 
    ```text
    http://localhost:5223
    ```
 
-The app applies migrations on startup and creates the default admin account if it does not already exist.
+The application checks the database on startup and creates the default admin account if it does not already exist.
 
-## Default Admin
+## Default Login
 
 ```text
 Username: admin
 Password: admin123
 ```
 
-Change the password after the first login.
+For security, the password should be changed after the first login.
+
+## Database
+
+The local version uses SQL Server through Entity Framework Core. The deployed demo is configured to use SQLite on Azure App Service for faster startup during project demonstration.
+
+The application includes startup safeguards for hosted deployment, including retry support and optional SQLite maintenance switches used during deployment.
 
 ## Deployment
 
-The deployed demo is hosted on Azure App Service and uses Azure SQL Database for the online database.
+The demo is deployed on Azure App Service:
 
-For course submission, include the live demo link, the GitHub source code link, and a separate presentation/video link in the project report.
+```text
+http://scoutingapp76658.azurewebsites.net
+```
+
+For the course submission, the report should include:
+
+- Project demo link
+- Presentation/video explanation link
+- GitHub source code link
+
+## Course Context
+
+This project was developed for the Web Programming course as a football scouting management system. It demonstrates server-side MVC development, database integration, authentication, role-based authorization, and a complete CRUD workflow for a real-world scouting scenario.
