@@ -5,6 +5,7 @@ using ScoutingAppMvc.Data;
 using ScoutingAppMvc.Helpers;
 using ScoutingAppMvc.Models;
 using System.Globalization;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,6 +81,60 @@ builder.Services.AddControllersWithViews()
             System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 
+static string RepairMojibake(string value)
+{
+    if (string.IsNullOrEmpty(value) || (!value.Contains('Ã') && !value.Contains('Â')))
+    {
+        return value;
+    }
+
+    return Encoding.UTF8.GetString(Encoding.Latin1.GetBytes(value));
+}
+
+static bool RepairTextEncoding(AppDbContext db)
+{
+    var changed = false;
+
+    foreach (var player in db.Players)
+    {
+        var name = RepairMojibake(player.Name);
+        var team = RepairMojibake(player.Team);
+        var position = RepairMojibake(player.Position);
+        var otherPosition = RepairMojibake(player.OtherPosition);
+        var firstName = RepairMojibake(player.FirstName);
+        var lastName = RepairMojibake(player.LastName);
+        var nationality = RepairMojibake(player.Nationality);
+        var foot = RepairMojibake(player.Foot);
+
+        if (name != player.Name) { player.Name = name; changed = true; }
+        if (team != player.Team) { player.Team = team; changed = true; }
+        if (position != player.Position) { player.Position = position; changed = true; }
+        if (otherPosition != player.OtherPosition) { player.OtherPosition = otherPosition; changed = true; }
+        if (firstName != player.FirstName) { player.FirstName = firstName; changed = true; }
+        if (lastName != player.LastName) { player.LastName = lastName; changed = true; }
+        if (nationality != player.Nationality) { player.Nationality = nationality; changed = true; }
+        if (foot != player.Foot) { player.Foot = foot; changed = true; }
+    }
+
+    foreach (var report in db.Reports)
+    {
+        var ratedPosition = RepairMojibake(report.RatedPosition);
+        var receivedCards = RepairMojibake(report.ReceivedCards);
+        var comments = report.Comments is null ? null : RepairMojibake(report.Comments);
+
+        if (ratedPosition != report.RatedPosition) { report.RatedPosition = ratedPosition; changed = true; }
+        if (receivedCards != report.ReceivedCards) { report.ReceivedCards = receivedCards; changed = true; }
+        if (comments != report.Comments) { report.Comments = comments; changed = true; }
+    }
+
+    if (changed)
+    {
+        db.SaveChanges();
+    }
+
+    return changed;
+}
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -96,6 +151,15 @@ using (var scope = app.Services.CreateScope())
         {
             // Apply any pending migrations (creates the DB if it doesn't exist)
             db.Database.Migrate();
+        }
+
+        if (useSqlite && string.Equals(
+                builder.Configuration["SqliteRepairTextEncoding"],
+                "true",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            var repaired = RepairTextEncoding(db);
+            Console.WriteLine($"SQLite text encoding repair ran. Changed data: {repaired}");
         }
 
         // Seed the default admin account if it doesn't exist
