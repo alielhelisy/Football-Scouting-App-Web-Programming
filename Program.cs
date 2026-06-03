@@ -8,13 +8,37 @@ using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
+var useSqlite = string.Equals(databaseProvider, "Sqlite", StringComparison.OrdinalIgnoreCase);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 10,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null)));
+{
+    if (useSqlite)
+    {
+        var sqlitePath = builder.Configuration["SqliteDatabasePath"];
+        if (string.IsNullOrWhiteSpace(sqlitePath))
+        {
+            var homePath = Environment.GetEnvironmentVariable("HOME");
+            var dataDir = string.IsNullOrWhiteSpace(homePath)
+                ? AppContext.BaseDirectory
+                : Path.Combine(homePath, "data");
+
+            Directory.CreateDirectory(dataDir);
+            sqlitePath = Path.Combine(dataDir, "scoutingapp.db");
+        }
+
+        options.UseSqlite($"Data Source={sqlitePath}");
+    }
+    else
+    {
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            sqlOptions => sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 10,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null));
+    }
+});
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -41,8 +65,15 @@ using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // Apply any pending migrations (creates the DB if it doesn't exist)
-        db.Database.Migrate();
+        if (useSqlite)
+        {
+            db.Database.EnsureCreated();
+        }
+        else
+        {
+            // Apply any pending migrations (creates the DB if it doesn't exist)
+            db.Database.Migrate();
+        }
 
         // Seed the default admin account if it doesn't exist
         if (!db.Users.Any(u => u.Username == "admin"))
